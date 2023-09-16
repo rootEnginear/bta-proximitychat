@@ -1,9 +1,11 @@
 {
     "required": true,
     "minVersion": "0.8",
-    "package": "turniplabs.examplemod.mixin",
+    "package": "rootenginear.proximitychat.mixin",
     "compatibilityLevel": "JAVA_8",
     "mixins": [
+        "NetServerHandlerMixin",
+        "ServerConfigurationManagerMixin"
     ],
     "client": [
     ],
