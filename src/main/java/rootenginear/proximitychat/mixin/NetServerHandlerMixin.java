@@ -8,7 +8,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import rootenginear.proximitychat.ProximityChat;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Mixin(value = {NetServerHandler.class}, remap = false)
@@ -24,18 +26,23 @@ public class NetServerHandlerMixin {
             )
     )
     private void proximityChat(ServerConfigurationManager instance, String s) {
-        Pattern globalChatPattern = Pattern.compile("<.+?> §0#");
-        if (globalChatPattern.matcher(s).find()) {
-            instance.sendEncryptedChatToAllPlayers(s.replace("> §0#", "> (Global) §0"));
+        if (ProximityChat.RADIUS > 0) {
+            Pattern globalChatPattern = Pattern.compile("<(.+?)> §0" + ProximityChat.GLOBAL_TAG + "(.+)");
+            Matcher result = globalChatPattern.matcher(s);
+            if (result.matches()) {
+                instance.sendEncryptedChatToAllPlayers(ProximityChat.GLOBAL_STR.replace("{PLAYER}", result.group(1)).replace("{MSG}", result.group(2)));
+                return;
+            }
+            instance.sendPacketToPlayersAroundPoint(
+                    this.playerEntity.x,
+                    this.playerEntity.y,
+                    this.playerEntity.z,
+                    ProximityChat.RADIUS,
+                    this.playerEntity.dimension,
+                    new Packet3Chat(s)
+            );
             return;
         }
-        instance.sendPacketToPlayersAroundPoint(
-                this.playerEntity.x,
-                this.playerEntity.y,
-                this.playerEntity.z,
-                50.0,
-                this.playerEntity.dimension,
-                new Packet3Chat(s)
-        );
+        instance.sendEncryptedChatToAllPlayers(s);
     }
 }
